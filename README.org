@@ -1,0 +1,42 @@
+#+title: LispM MYCIN
+
+#+HTML: <p align="center"><a href="https://github.com/LispMachineLab/lispm-mycin/actions/workflows/test.yml"><img src="https://github.com/LispMachineLab/lispm-mycin/actions/workflows/test.yml/badge.svg" alt="test" /></a></p>
+
+MYCIN, the expert system written at Stanford in the 1970s, as an application of [[https://github.com/LispMachineLab/lispm-desktop][LispM Desktop]],
+which its App Store installs.  In code, the prefix is ~lispm-mycin-~.
+
+* What it does
+
+MYCIN asks a doctor about a patient and the cultures taken from them, and names the organisms
+likely to infect the blood, each with a certainty factor:
+
+#+begin_example
+------ ORGANISM-1 ------
+Enter the identity (genus) of ORGANISM-1: unknown
+The gram stain of ORGANISM-1: neg
+Is ORGANISM-1 a rod or coccus (etc.): rod
+What is the AEROBICITY of ORGANISM-1? aerobic
+Is Sylvia Fischer a compromised host? yes
+Is Sylvia Fischer a burn patient?  If so, mild or serious? serious
+Findings for ORGANISM-1:
+ IDENTITY: ENTEROBACTERIACEAE (0.800)   PSEUDOMONAS (0.760)
+#+end_example
+
+Besides an answer it takes =help=, =?= for the answers it accepts, =why= for the rule it is
+trying, =rule= for that rule as written, =unknown=, and several answers with certainty factors,
+as =(neg .8 pos .2)=.  The window's buttons and the MYCIN menu say the same.
+
+* How it works
+
+This is the MYCIN Peter Norvig rebuilt in /Paradigms of Artificial Intelligence Programming/
+(chapter 16): the EMYCIN shell and a sample of rules, in Common Lisp, unchanged in [[file:paip/][paip/]] under
+their MIT License.  [[https://github.com/LispMachineLab/emacs-cl][Emacs Common Lisp]] runs them, in a batch Emacs beside yours; the App Store
+installs it first.  ~M-x lispm-mycin~ opens a consultation, ~C-c C-n~ starts another.
+
+* Develop
+
+#+begin_src sh
+make test compile   # EMACS_CL=../emacs-cl by default
+#+end_src
+
+AGPL-3.0-or-later; paip/ is MIT, see [[file:paip/README][paip/README]].

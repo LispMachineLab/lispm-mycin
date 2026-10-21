@@ -1,0 +1,6 @@
+MYCIN of Peter Norvig's "Paradigms of Artificial Intelligence
+Programming" (1992), chapter 16: the files auxfns.lisp, mycin.lisp and
+mycin-r.lisp of https://github.com/norvig/paip-lisp, at commit
+9cea73837e439d331fe78d7b585e994c7113aac2, unchanged.  They are under
+the MIT License of LICENSE in this directory; the rest of
+lispm-mycin is under the GNU Affero General Public License.
