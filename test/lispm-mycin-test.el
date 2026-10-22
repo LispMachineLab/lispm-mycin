@@ -31,7 +31,13 @@ the last one waited for; return non-nil when it came within SECONDS."
                                    (re-search-forward regexp nil t))))
                 (< (float-time) end))
       (accept-process-output (get-buffer-process (current-buffer)) 0.1))
-    (when found (set-marker lispm-mycin-test--from found))
+    (if found
+        (set-marker lispm-mycin-test--from found)
+      ;; What MYCIN and its Emacs said, for a failure in CI.
+      (message "No %S in:\n%s\nErrors:\n%s" regexp (buffer-string)
+               (if-let* ((errors (get-buffer " *mycin errors*")))
+                   (with-current-buffer errors (buffer-string))
+                 "")))
     found))
 
 (defun lispm-mycin-test-answer (regexp answer)
