@@ -61,6 +61,10 @@ the last one waited for; return non-nil when it came within SECONDS."
    (lispm-mycin-say "Sylvia Fischer")
    (should (lispm-mycin-test-wait-for "Sex: "))
    (should (lispm-mycin-asking-p))
+   ;; An answer MYCIN cannot read asks again, rather than ending it.
+   (lispm-mycin-say "(male .5, female .5)")
+   (should (lispm-mycin-test-wait-for "MYCIN cannot read that answer"))
+   (should (lispm-mycin-test-wait-for "Sex: "))
    (lispm-mycin-say "female")
    (lispm-mycin-test-answer "Age: " "27")
    (lispm-mycin-test-answer "taken\\? " "blood")

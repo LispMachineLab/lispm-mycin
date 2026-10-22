@@ -107,7 +107,11 @@ can type.\n\n"
   (let ((process (emacs-cl-start buffer
                                  :name "mycin"
                                  :load (list (lispm-mycin--file "auxfns.lisp"))
-                                 :eval '("(requires \"mycin\" \"mycin-r\")" "(mycin)"))))
+                                 :eval (list "(requires \"mycin\" \"mycin-r\")"
+                                             (format "(load %S)"
+                                                     (expand-file-name "lisp/mycin.lisp"
+                                                                       lispm-mycin-directory))
+                                             "(mycin)"))))
     (set-process-sentinel process #'lispm-mycin--sentinel)
     process))
 
