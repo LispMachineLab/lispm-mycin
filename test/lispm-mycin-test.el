@@ -54,8 +54,14 @@ the last one waited for; return non-nil when it came within SECONDS."
   "A consultation as in PAIP: MYCIN names the organisms and ends."
   (lispm-mycin-test-consultation
    (should (string-prefix-p "MYCIN names the organisms" (buffer-string)))
-   (lispm-mycin-test-answer "Patient's name: " "Sylvia Fischer")
-   (lispm-mycin-test-answer "Sex: " "female")
+   ;; The name is read as a line: why there would be a name.
+   (should (lispm-mycin-test-wait-for "Patient's name: "))
+   (should-not (lispm-mycin-asking-p))
+   (should-error (lispm-mycin-why) :type 'user-error)
+   (lispm-mycin-say "Sylvia Fischer")
+   (should (lispm-mycin-test-wait-for "Sex: "))
+   (should (lispm-mycin-asking-p))
+   (lispm-mycin-say "female")
    (lispm-mycin-test-answer "Age: " "27")
    (lispm-mycin-test-answer "taken\\? " "blood")
    (lispm-mycin-test-answer "obtained\\? " "3")
@@ -72,7 +78,9 @@ the last one waited for; return non-nil when it came within SECONDS."
    ;; Rules 107 and 52, then 75 with 52, as in the book.
    (should (lispm-mycin-test-wait-for
             "IDENTITY: ENTEROBACTERIACEAE (0\\.800) +PSEUDOMONAS (0\\.760)"))
-   (lispm-mycin-test-answer "another ORGANISM\\? (y or n) " "n")
+   (should (lispm-mycin-test-wait-for "another ORGANISM\\? (y or n) "))
+   (should-not (lispm-mycin-asking-p))
+   (lispm-mycin-say "n")
    (lispm-mycin-test-answer "another CULTURE\\? (y or n) " "n")
    (lispm-mycin-test-answer "another PATIENT\\? (y or n) " "n")
    (should (lispm-mycin-test-wait-for "The consultation is over"))

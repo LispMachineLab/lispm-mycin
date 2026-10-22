@@ -5,7 +5,7 @@
 ;; Author: Ryan.K
 ;; URL: https://github.com/LispMachineLab/lispm-mycin
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "30.1"))
+;; Package-Requires: ((emacs "30.1") (emacs-cl "0.6.0"))
 ;; Keywords: games, lisp
 ;; SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -64,7 +64,8 @@
 (defconst lispm-mycin-introduction
   "MYCIN names the organisms likely to infect a patient's blood, from
 what you tell it about the patient and the cultures taken.  Type each
-answer and Return; help says what else you can type.\n\n"
+answer and Return; after the patient's name, help says what else you
+can type.\n\n"
   "What a new consultation starts with.")
 
 (defface lispm-mycin-heading '((t :weight bold))
@@ -95,8 +96,7 @@ answer and Return; help says what else you can type.\n\n"
           (goto-char (point-max))
           (insert (if (eq 0 (process-exit-status process))
                       "\n\nThe consultation is over.  C-c C-n starts another.\n"
-                    (format "\n\nMYCIN stopped (%s).  C-c C-n starts again.\n"
-                            (process-exit-status process)))))))))
+                    "\n\nMYCIN stopped on an error.  C-c C-n starts again.\n")))))))
 
 (defun lispm-mycin--start (buffer)
   "Start a consultation in BUFFER."
@@ -115,6 +115,23 @@ answer and Return; help says what else you can type.\n\n"
   "Return non-nil while MYCIN asks, in the consultation's buffer."
   (let ((buffer (get-buffer lispm-mycin-buffer-name)))
     (and buffer (process-live-p (get-buffer-process buffer)))))
+
+(defun lispm-mycin-asking-p ()
+  "Return non-nil while MYCIN waits for an answer it reads as a value,
+which why, rule, ? and unknown may take the place of.  It reads the
+patient's name as a line of text, and a y or n question takes y or n."
+  (when-let* ((buffer (get-buffer lispm-mycin-buffer-name))
+              (process (get-buffer-process buffer))
+              ((process-live-p process)))
+    (with-current-buffer buffer
+      (let* ((mark (process-mark process))
+             ;; Comint's output is a field of its own: go past it.
+             (prompt (buffer-substring-no-properties
+                      (let ((inhibit-field-text-motion t))
+                        (save-excursion (goto-char mark) (line-beginning-position)))
+                      mark)))
+        (and (string-match-p "[?:] *\\'" prompt)
+             (not (string-match-p "name: *\\'\\|(y or n) *\\'" prompt)))))))
 
 ;;;###autoload
 (defun lispm-mycin ()
@@ -143,6 +160,13 @@ answer and Return; help says what else you can type.\n\n"
 
 ;;;; Answering
 
+(defun lispm-mycin--answer (words)
+  "Answer WORDS, one of why, rule, ? and unknown, to MYCIN's question."
+  (unless (lispm-mycin-asking-p)
+    (user-error "MYCIN takes %s only as the answer to a question about the patient" words))
+  (with-current-buffer lispm-mycin-buffer-name
+    (lispm-mycin-say words)))
+
 (defun lispm-mycin-say (words)
   "Answer WORDS to MYCIN's question, as if typed."
   (let ((process (get-buffer-process (current-buffer))))
@@ -156,27 +180,27 @@ answer and Return; help says what else you can type.\n\n"
 (defun lispm-mycin-why ()
   "Ask MYCIN why it asks: the rule it is trying."
   (interactive)
-  (lispm-mycin-say "why"))
+  (lispm-mycin--answer "why"))
 
 (defun lispm-mycin-rule ()
   "Show the rule MYCIN is trying, as it is written."
   (interactive)
-  (lispm-mycin-say "rule"))
+  (lispm-mycin--answer "rule"))
 
 (defun lispm-mycin-choices ()
   "Ask MYCIN what answers it accepts to its question."
   (interactive)
-  (lispm-mycin-say "?"))
+  (lispm-mycin--answer "?"))
 
 (defun lispm-mycin-unknown ()
   "Answer that the answer is not known."
   (interactive)
-  (lispm-mycin-say "unknown"))
+  (lispm-mycin--answer "unknown"))
 
 (defun lispm-mycin-help ()
   "Ask MYCIN what can be typed."
   (interactive)
-  (lispm-mycin-say "help"))
+  (lispm-mycin--answer "help"))
 
 ;;;; Mode
 
@@ -198,11 +222,11 @@ answer and Return; help says what else you can type.\n\n"
   '("MYCIN"
     ["New Consultation" lispm-mycin-new]
     "---"
-    ["Why?" lispm-mycin-why (lispm-mycin-running-p)]
-    ["Show the Rule" lispm-mycin-rule (lispm-mycin-running-p)]
-    ["Possible Answers" lispm-mycin-choices (lispm-mycin-running-p)]
-    ["Unknown" lispm-mycin-unknown (lispm-mycin-running-p)]
-    ["Help" lispm-mycin-help (lispm-mycin-running-p)]))
+    ["Why?" lispm-mycin-why (lispm-mycin-asking-p)]
+    ["Show the Rule" lispm-mycin-rule (lispm-mycin-asking-p)]
+    ["Possible Answers" lispm-mycin-choices (lispm-mycin-asking-p)]
+    ["Unknown" lispm-mycin-unknown (lispm-mycin-asking-p)]
+    ["Help" lispm-mycin-help (lispm-mycin-asking-p)]))
 
 (define-derived-mode lispm-mycin-mode comint-mode "MYCIN"
   "Major mode of a MYCIN consultation, opened by `lispm-mycin'.
@@ -225,10 +249,10 @@ Type each answer and Return.
    :title "MYCIN"
    :prose t
    :buttons '(("New Consultation" lispm-mycin-new)
-              ("Why?" lispm-mycin-why lispm-mycin-running-p)
-              ("Rule" lispm-mycin-rule lispm-mycin-running-p)
-              ("Answers" lispm-mycin-choices lispm-mycin-running-p)
-              ("Unknown" lispm-mycin-unknown lispm-mycin-running-p))
+              ("Why?" lispm-mycin-why lispm-mycin-asking-p)
+              ("Rule" lispm-mycin-rule lispm-mycin-asking-p)
+              ("Answers" lispm-mycin-choices lispm-mycin-asking-p)
+              ("Unknown" lispm-mycin-unknown lispm-mycin-asking-p))
    :label (lambda () "Type an answer, then Return")
    :status #'lispm-mycin--status))
 
