@@ -5,7 +5,7 @@
 ;; Author: Ryan.K
 ;; URL: https://github.com/LispMachineLab/lispm-mycin
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "30.1") (emacs-cl "0.6.0"))
+;; Package-Requires: ((emacs "30.1") (emacs-cl "0.6.0") (lispm-kit "0.1.0"))
 ;; Keywords: games, lisp
 ;; SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -45,7 +45,7 @@
 ;;; Code:
 
 (require 'comint)
-(require 'easymenu)
+(require 'lispm-kit-commands)
 (require 'emacs-cl)
 
 (defgroup lispm-mycin nil
@@ -209,27 +209,23 @@ patient's name as a line of text, and a y or n question takes y or n."
 
 (defvar-keymap lispm-mycin-mode-map
   :parent comint-mode-map
-  "C-c C-n" #'lispm-mycin-new
-  "C-c C-w" #'lispm-mycin-why
-  "C-c C-r" #'lispm-mycin-rule
-  "C-c C-c" #'lispm-mycin-choices
-  "C-c C-u" #'lispm-mycin-unknown
-  "C-c C-h" #'lispm-mycin-help
   ;; Comint's menus are a shell's.
   "<menu-bar> <signals>" #'undefined
   "<menu-bar> <inout>" #'undefined
   "<menu-bar> <completion>" #'undefined)
 
-(easy-menu-define lispm-mycin-menu lispm-mycin-mode-map
-  "Menu of a MYCIN consultation."
-  '("MYCIN"
-    ["New Consultation" lispm-mycin-new]
-    "---"
-    ["Why?" lispm-mycin-why (lispm-mycin-asking-p)]
-    ["Show the Rule" lispm-mycin-rule (lispm-mycin-asking-p)]
-    ["Possible Answers" lispm-mycin-choices (lispm-mycin-asking-p)]
-    ["Unknown" lispm-mycin-unknown (lispm-mycin-asking-p)]
-    ["Help" lispm-mycin-help (lispm-mycin-asking-p)]))
+;; Each command once: its keys, its menu item and, for the main ones, the
+;; words of a button, for an interface showing them as buttons.
+(lispm-kit-define-commands lispm-mycin-mode
+  :menu "MYCIN"
+  (lispm-mycin-new :key "C-c C-n" :label "New Consultation" :button t)
+  "---"
+  (lispm-mycin-why :key "C-c C-w" :label "Why?" :button t :enabled (lispm-mycin-asking-p))
+  (lispm-mycin-rule :key "C-c C-r" :label "Show the Rule" :button "Rule" :enabled (lispm-mycin-asking-p))
+  (lispm-mycin-choices
+   :key "C-c C-c" :label "Possible Answers" :button "Answers" :enabled (lispm-mycin-asking-p))
+  (lispm-mycin-unknown :key "C-c C-u" :label "Unknown" :button t :enabled (lispm-mycin-asking-p))
+  (lispm-mycin-help :key "C-c C-h" :label "Help" :enabled (lispm-mycin-asking-p)))
 
 (define-derived-mode lispm-mycin-mode comint-mode "MYCIN"
   "Major mode of a MYCIN consultation, opened by `lispm-mycin'.
