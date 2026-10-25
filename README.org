@@ -33,12 +33,14 @@ as =(neg .8 pos .2)=.  The window's buttons and the MYCIN menu say the same.
 This is the MYCIN Peter Norvig rebuilt in /Paradigms of Artificial Intelligence Programming/
 (chapter 16): the EMYCIN shell and a sample of rules, in Common Lisp, unchanged in [[file:paip/][paip/]] under
 their MIT License.  [[https://github.com/LispMachineLab/emacs-cl][Emacs Common Lisp]] runs them, in a batch Emacs beside yours; the App Store
-installs it first.  ~M-x lispm-mycin~ opens a consultation, ~C-c C-n~ starts another.
+installs it first, and [[https://github.com/LispMachineLab/lispm-kit][LispM Kit]], with which the window declares each command once:
+its key, its menu item and, for the main ones, the words of a button.  ~M-x lispm-mycin~ opens a
+consultation, ~C-c C-n~ starts another.
 
 * Develop
 
 #+begin_src sh
-make test compile   # EMACS_CL=../emacs-cl by default
+make test compile   # EMACS_CL=../emacs-cl LISPM_KIT=../lispm-kit by default
 #+end_src
 
 A test checks that no file of MYCIN but the tests names LispM Desktop's code.
