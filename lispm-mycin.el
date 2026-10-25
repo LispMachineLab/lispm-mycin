@@ -39,15 +39,14 @@
 ;; accepts, why for the rule it is trying, rule for that rule as it is
 ;; written, and unknown; and several answers with certainty factors, as
 ;; (neg .8 pos .2).  In LispM Desktop it is an application of the App
-;; Store, with buttons for these.
+;; Store, with buttons for these: the desktop dresses its window from
+;; its own side, with `lispm-mycin-asking-p' and `lispm-mycin-status'.
 
 ;;; Code:
 
 (require 'comint)
 (require 'easymenu)
 (require 'emacs-cl)
-
-(declare-function lispm-desktop-app-ui-define "lispm-desktop-app-ui" (key &rest properties))
 
 (defgroup lispm-mycin nil
   "MYCIN, the expert system of the 1970s."
@@ -241,24 +240,11 @@ Type each answer and Return.
   (setq-local font-lock-defaults '(lispm-mycin-font-lock-keywords t))
   (font-lock-mode 1))
 
-;;;; In LispM Desktop
+;;;; What the window says
 
-(defun lispm-mycin--status ()
-  "Return what the window's bottom says."
+(defun lispm-mycin-status ()
+  "Return what a consultation's window says at its bottom."
   (if (lispm-mycin-running-p) "Consulting" "Finished"))
-
-(with-eval-after-load 'lispm-desktop-app-ui
-  (lispm-desktop-app-ui-define
-   'lispm-mycin-mode
-   :title "MYCIN"
-   :prose t
-   :buttons '(("New Consultation" lispm-mycin-new)
-              ("Why?" lispm-mycin-why lispm-mycin-asking-p)
-              ("Rule" lispm-mycin-rule lispm-mycin-asking-p)
-              ("Answers" lispm-mycin-choices lispm-mycin-asking-p)
-              ("Unknown" lispm-mycin-unknown lispm-mycin-asking-p))
-   :label (lambda () "Type an answer, then Return")
-   :status #'lispm-mycin--status))
 
 (provide 'lispm-mycin)
 ;;; lispm-mycin.el ends here

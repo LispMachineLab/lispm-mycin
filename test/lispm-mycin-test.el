@@ -109,7 +109,8 @@ the last one waited for; return non-nil when it came within SECONDS."
    (should (lispm-mycin-test-wait-for "Sex: "))
    (lispm-mycin-unknown)
    (should (lispm-mycin-test-wait-for "Age: "))
-   (should (lispm-mycin-running-p))))
+   (should (lispm-mycin-running-p))
+   (should (equal (lispm-mycin-status) "Consulting"))))
 
 (ert-deftest lispm-mycin-new-ends-the-old ()
   "A new consultation ends the one under way and starts afresh."
@@ -122,5 +123,14 @@ the last one waited for; return non-nil when it came within SECONDS."
      (should-not (string-search "Patient's name" (buffer-string)))
      (set-marker lispm-mycin-test--from (point-min))
      (should (lispm-mycin-test-wait-for "Patient's name: ")))))
+
+(ert-deftest lispm-mycin-knows-no-desktop ()
+  "MYCIN stands alone: none of its files but the tests names LispM
+Desktop's code, which dresses its window from its own side."
+  (dolist (file (directory-files (file-name-directory (locate-library "lispm-mycin")) t "\\.el\\'"))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (should-not (and (re-search-forward "lispm-desktop\\|platinum" nil t)
+                       (format "%s:%d" (file-name-nondirectory file) (line-number-at-pos)))))))
 
 ;;; lispm-mycin-test.el ends here
